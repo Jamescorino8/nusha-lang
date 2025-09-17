@@ -1,0 +1,16 @@
+public enum TokenTypes {
+    IDENTIFIER,
+    NUMBER,
+    ASSIGN,
+    EQUALS,
+    PLUS,
+    MINUS,
+    MULTIPLY,
+    DIVIDE,
+    LEFTCURLY,
+    RIGHTCURLY,
+    SEMICOLON,
+    COMMA,
+    LEFTPARENTHESE,
+    RIGHTPARENTHESE
+}
