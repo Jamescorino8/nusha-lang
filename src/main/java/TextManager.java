@@ -30,7 +30,7 @@ public class TextManager {
     }
 
     public int getPosition() {
-        return position;
+        return position + 1;
     }
 
     public int getLineNumber() {
