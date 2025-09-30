@@ -25,7 +25,7 @@ public class TokenManager {
 
     public Optional<Token> MatchAndRemove(Token.TokenTypes t) {
         Optional<Token> match = Optional.empty();
-        if (tokens.getFirst().Type == t) {
+        if (!tokens.isEmpty() && tokens.getFirst().Type == t) {
             match = Optional.of(tokens.getFirst());
             tokens.removeFirst();
         }
@@ -33,6 +33,20 @@ public class TokenManager {
     }
 
     public Optional<Token> Peek (int i) {
-        return Optional.of(tokens.get(i));
+        if (i < tokens.size()) {
+            return Optional.of(tokens.get(i));
+        }
+        return Optional.empty();
+    }
+
+    void RequireNewLine() throws SyntaxErrorException {
+        // Require at least one NEWLINE token; then collapse subsequent NEWLINEs.
+        if (MatchAndRemove(Token.TokenTypes.NEWLINE).isEmpty()) {
+            throw new SyntaxErrorException("Expected newline.", getLine(), getColumn());
+        }
+        while (MatchAndRemove(Token.TokenTypes.NEWLINE).isPresent()) {
+            // consume extra blank lines
+
+        }
     }
 }
