@@ -95,52 +95,106 @@ public class Interpreter {
         }
     }
 
-    // Backtracking
+    // Forward checking with candidate filtering
     private boolean solve(int index, List<SolverVariable> vars, Rules rules) throws Exception {
-        if (index == vars.size()) {
-            return true;
+        // Initialize possible values for all variables
+        List<List<Integer>> possibleValues = new ArrayList<>();
+        for (SolverVariable sv : vars) {
+            List<Integer> potentialValues = new ArrayList<>();
+            for (int i = 0; i < sv.max; i++) {
+                potentialValues.add(i);
+            }
+            possibleValues.add(potentialValues);
         }
-
-        SolverVariable sv = vars.get(index);
         
-        // Uniqueness is only enforced if the variable definition requires it && max options >= array size
-        boolean enforceUnique = false;
-        if (sv.isUnique) {
-            int arraySize = variables.get(sv.varName).length;
-            if (sv.max >= arraySize) enforceUnique = true;
+        return assignValues(0, vars, possibleValues, rules);
+    }
+    
+    // Assign values with forward checking
+    private boolean assignValues(int index, List<SolverVariable> vars, List<List<Integer>> possibleValues, Rules rules) throws Exception {
+        if (index == vars.size()) {
+            return checkRules(rules);
         }
-
-        for (int val = 0; val < sv.max; val++) {
+        
+        SolverVariable sv = vars.get(index);
+        List<Integer> currentPotentialValues = new ArrayList<>(possibleValues.get(index));
+        
+        for (int val : currentPotentialValues) {
             sv.setValue(val);
             
-            if (enforceUnique) {
-                boolean collision = false;
-                int currentVal = sv.getValue();
-                
-                for (int i = 0; i < index; i++) {
-                    SolverVariable prev = vars.get(i);
-                    // Must be same variable array and same field
-                    if (prev.varName.equals(sv.varName) && 
-                        Objects.equals(prev.fieldKey, sv.fieldKey)) {
-                        
-                        if (prev.getValue() == currentVal) {
-                            collision = true;
+            // Check uniqueness constraint
+            boolean valid = true;
+            if (sv.isUnique) {
+                int arraySize = variables.get(sv.varName).length;
+                if (sv.max >= arraySize) {
+                    for (int i = 0; i < index; i++) {
+                        SolverVariable prev = vars.get(i);
+                        if (prev.varName.equals(sv.varName) && 
+                            Objects.equals(prev.fieldKey, sv.fieldKey) &&
+                            prev.getValue() == val) {
+                            valid = false;
                             break;
                         }
                     }
                 }
-                if (collision) continue; 
             }
-
-            // Remove branch if assignment already violates a rule.
+            
+            if (!valid) continue;
+            
+            // Check rules with current assignment
             if (!checkRules(rules)) continue;
-
-            if (solve(index + 1, vars, rules)) {
-                return true; 
+            
+            // Forward check: update possible values for future variables
+            List<List<Integer>> updatedPossibleValues = new ArrayList<>();
+            for (int i = 0; i <= index; i++) {
+                updatedPossibleValues.add(new ArrayList<>(possibleValues.get(i)));
+            }
+            
+            boolean noValidOptions = false;
+            for (int i = index + 1; i < vars.size(); i++) {
+                List<Integer> futurePotentialValues = new ArrayList<>();
+                SolverVariable futureVar = vars.get(i);
+                
+                // Check uniqueness constraints
+                for (int futureVal : possibleValues.get(i)) {
+                    boolean canUse = true;
+                    
+                    if (futureVar.isUnique) {
+                        int arraySize = variables.get(futureVar.varName).length;
+                        if (futureVar.max >= arraySize) {
+                            // Check against already assigned variables
+                            for (int j = 0; j <= index; j++) {
+                                SolverVariable assigned = vars.get(j);
+                                if (assigned.varName.equals(futureVar.varName) &&
+                                    Objects.equals(assigned.fieldKey, futureVar.fieldKey) &&
+                                    assigned.getValue() == futureVal) {
+                                    canUse = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (canUse) {
+                        futurePotentialValues.add(futureVal);
+                    }
+                }
+                
+                if (futurePotentialValues.isEmpty()) {
+                    noValidOptions = true;
+                    break;
+                }
+                updatedPossibleValues.add(futurePotentialValues);
+            }
+            
+            if (noValidOptions) continue;
+            
+            if (assignValues(index + 1, vars, updatedPossibleValues, rules)) {
+                return true;
             }
         }
         
-        sv.setValue(-1); 
+        sv.setValue(-1);
         return false;
     }
 
