@@ -65,19 +65,26 @@ public class NushaFall2025Parser {
         return Optional.of(def);
     }
 
-    // Choices = '{' IDENTIFIER (',' IDENTIFIER )* '}'
+    // A choice value is a name (Red) or a number literal (45).
+    private Optional<Token> ChoiceValue() {
+        Optional<Token> value = tokenManager.MatchAndRemove(TokenTypes.IDENTIFIER);
+        if (value.isEmpty()) value = tokenManager.MatchAndRemove(TokenTypes.NUMBER);
+        return value;
+    }
+
+    // Choices = '{' ChoiceValue (',' ChoiceValue )* '}'
     public Optional<Choices> ChoicesNode() throws SyntaxErrorException {
         if (tokenManager.MatchAndRemove(TokenTypes.LEFTCURLY).isEmpty()) {
             throw new SyntaxErrorException("Choices must start with '{'", tokenManager.getLine(), tokenManager.getColumn());
         }
         Choices choices = new Choices();
-        // At least one identifier
-        Optional<Token> id = tokenManager.MatchAndRemove(TokenTypes.IDENTIFIER);
-        if (id.isEmpty()) throw new SyntaxErrorException("Choices must have at least one identifier", tokenManager.getLine(), tokenManager.getColumn());
+        // At least one value
+        Optional<Token> id = ChoiceValue();
+        if (id.isEmpty()) throw new SyntaxErrorException("Choices must have at least one identifier or number", tokenManager.getLine(), tokenManager.getColumn());
         choices.choice.add(id.get().Value.orElse(""));
         while (tokenManager.MatchAndRemove(TokenTypes.COMMA).isPresent()) {
-            Optional<Token> next = tokenManager.MatchAndRemove(TokenTypes.IDENTIFIER);
-            if (next.isEmpty()) throw new SyntaxErrorException("Comma in choices must be followed by identifier", tokenManager.getLine(), tokenManager.getColumn());
+            Optional<Token> next = ChoiceValue();
+            if (next.isEmpty()) throw new SyntaxErrorException("Comma in choices must be followed by an identifier or number", tokenManager.getLine(), tokenManager.getColumn());
             choices.choice.add(next.get().Value.orElse(""));
         }
         if (tokenManager.MatchAndRemove(TokenTypes.RIGHTCURLY).isEmpty()) {
@@ -244,9 +251,20 @@ public class NushaFall2025Parser {
         return Optional.of(e);
     }
 
-    // VariableReference = IDENTIFIER  VRModifier?
+    // VariableReference = IDENTIFIER VRModifier? | NUMBER
     private Optional<VariableReference> VariableReferenceNode() throws SyntaxErrorException {
-        if (tokenManager.Peek(0).isEmpty() || tokenManager.Peek(0).get().Type != TokenTypes.IDENTIFIER) return Optional.empty();
+        if (tokenManager.Peek(0).isEmpty()) return Optional.empty();
+        TokenTypes nextType = tokenManager.Peek(0).get().Type;
+
+        // A number literal (45) is a bare value; no dot or index can follow it.
+        if (nextType == TokenTypes.NUMBER) {
+            VariableReference literal = new VariableReference();
+            literal.variableName = tokenManager.MatchAndRemove(TokenTypes.NUMBER).get().Value.orElse("");
+            literal.vrmodifier = Optional.empty();
+            return Optional.of(literal);
+        }
+
+        if (nextType != TokenTypes.IDENTIFIER) return Optional.empty();
         VariableReference vr = new VariableReference();
         vr.variableName = tokenManager.MatchAndRemove(TokenTypes.IDENTIFIER).get().Value.orElse("");
         Optional<VRModifier> mod = VRModifierNode();
