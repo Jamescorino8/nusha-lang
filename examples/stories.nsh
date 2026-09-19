@@ -17,3 +17,4 @@ Stories.a = Carol =>
     Stories.h = Green
 Stories.a = Bob =>
     Stories.p != Fish
+    Stories.h = Red

@@ -1,4 +1,4 @@
-# Nusha Compiler
+# Nusha
 
 A compiler and interpreter for **Nusha**, a domain-specific language for expressing and solving constraint satisfaction problems (CSPs). Written in Java as part of ICSI311 (Programming Languages).
 
@@ -11,6 +11,8 @@ The pipeline is:
 ```
 Source text → Lexer → Token list → Parser → AST → Interpreter/Solver → Solution
 ```
+
+![A logic puzzle in Nusha, and the unique assignment the solver derives from it](docs/demo.png)
 
 ## Language Syntax
 
@@ -87,6 +89,7 @@ Stories.a = Carol =>
     Stories.h = Green
 Stories.a = Bob =>
     Stories.p != Fish
+    Stories.h = Red
 ```
 
 ## Architecture
