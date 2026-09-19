@@ -1,0 +1,83 @@
+------------------------------------------ Puzzle 1 ------------------------------------------
+
+Four students—Aria, Blake, Chris, and Drew—each studied a different subject (Math, 
+History, Biology, Art) at a desk of a different color (Red, Blue, Green, Yellow) for a 
+different amount of minutes (30, 45, 60, 90).
+1. The Math student sat at the Blue desk and stayed 45 minutes.
+2. Chris sat at the Yellow desk.
+3. The Biology student sat at the Green desk and stayed 60 minutes.
+4. Aria studied neither History nor sat at the Red desk.
+5. Drew did not study Art.
+6. The History student stayed 90 minutes.
+7. The person at the Red desk did not stay 30 minutes.
+
+------------------------------------------
+
+Person = {Aria, Blake, Chris, Drew}
+Subject = {Math, History, Biology, Art}
+Desk = {Red, Blue, Green, Yellow}
+Minutes = {30, 45, 60, 90}
+Study = [unique Person p, unique Subject s, unique Desk d, unique Minutes m]
+var Sessions : Study[4]
+Sessions[0].p = Aria
+Sessions[1].p = Blake
+Sessions[2].p = Chris
+Sessions[3].p = Drew
+Sessions.s = Math =>
+    Sessions.d = Blue
+    Sessions.m = 45
+Sessions.p = Chris =>
+    Sessions.d = Yellow
+Sessions.s = Biology =>
+    Sessions.d = Green
+    Sessions.m = 60
+Sessions.p = Aria =>
+    Sessions.s != History
+    Sessions.d != Red
+Sessions.p = Drew =>
+    Sessions.s != Art
+Sessions.s = History =>
+    Sessions.m = 90
+Sessions.d = Red =>
+    Sessions.m != 30
+
+------------------------------------------ Puzzle 2 ------------------------------------------
+
+Four students—Emily, Frank, Grace, and Hugo—each presented a different project (Volcano, Robot,
+Solar System, Bridge), using a different material (Clay, Metal, Paper, Wood), at a different booth (A, B, C, D).
+1. The Volcano project used clay and was at Booth A.
+2. Grace did not make the Robot or the Solar System.
+3. Hugo’s project was at Booth D.
+4. The Bridge project used wood.
+5. Emily’s project was not at Booth B.
+6. The Robot project used metal.
+7. The Solar System project was not made of paper.
+
+------------------------------------------
+
+Student = {Emily, Frank, Grace, Hugo}
+Project = {Volcano, Robot, SolarSystem, Bridge}
+Material = {Clay, Metal, Paper, Wood}
+Booth = {A, B, C, D}
+Presentation = [unique Student s, unique Project p, unique Material m, unique Booth b]
+var Presentations : Presentation[4]
+Presentations[0].s = Emily
+Presentations[1].s = Frank
+Presentations[2].s = Grace
+Presentations[3].s = Hugo
+Presentations.p = Volcano =>
+    Presentations.m = Clay
+    Presentations.b = A
+Presentations.s = Grace =>
+    Presentations.p != Robot
+    Presentations.p != SolarSystem
+Presentations.s = Hugo =>
+    Presentations.b = D
+Presentations.p = Bridge =>
+    Presentations.m = Wood
+Presentations.s = Emily =>
+    Presentations.b != B
+Presentations.p = Robot =>
+    Presentations.m = Metal
+Presentations.p = SolarSystem =>
+    Presentations.m != Paper
